@@ -3,16 +3,17 @@ const regexPattern = document.getElementById("pattern");
 const stringToTest = document.getElementById("test-string");
 const testButton = document.getElementById("test-btn");
 const testResult = document.getElementById("result");
-const globalFlags = document.getElementById("g");
+const globalFlag = document.getElementById("g");
+const caseInsensitiveFlag = document.getElementById("i");
 
 //return flags
 function getFlags() {
-  const caseInsensitiveFlag = document.getElementById("i");
+  let flags = "";
 
-  const iChecked = caseInsensitiveFlag.checked ? "i" : "";
-  const gChecked = globalFlags.checked ? "g" : "";
+  flags += caseInsensitiveFlag.checked ? "i" : "";
+  flags += globalFlag.checked ? "g" : "";
 
-  return iChecked + gChecked;
+  return flags;
 }
 
 function getRegex(pattern) {
@@ -23,30 +24,51 @@ function getRegex(pattern) {
 function getRegexMatch(regex, string) {
   const matched = string.match(regex);
 
-  return globalFlags.checked ? matched.join(",") : matched[0];
+  if (matched === null) {
+    return "no match";
+  }
+
+  return globalFlag.checked ? matched.join(", ") : matched[0];
 }
 
-function highlightText(text) {
+function highlightText(userString) {
   let highlight = "";
-  let newText = "";
-  const textArr = text.split("");
+  let newWord = "";
 
-  for (letter of textArr) {
-    if (getRegex(regexPattern.value).test(letter)) {
-      highlight += letter;
-      continue;
-    } else {
-      newText += `<span class="\highlight\">${highlight}</span>${letter}`;
-      highlight = "";
-      continue;
+  if (!globalFlag.checked) {
+    for (const letter of userString) {
+      if (getRegex(regexPattern.value).test(letter)) {
+        newWord = userString.replace(
+          letter,
+          `<span class=\"highlight\">${letter}</span>`,
+        );
+        return newWord;
+      }
     }
   }
-  console.log(newText);
-  return newText;
+
+  for (const letter of userString) {
+    if (getRegex(regexPattern.value).test(letter)) {
+      highlight += letter;
+    } else {
+      newWord += highlight
+        ? `<span class=\"highlight\">${highlight}</span>${letter}`
+        : letter;
+      highlight = "";
+    }
+  }
+
+  if (highlight) {
+    newWord += `<span class=\"highlight\">${highlight}</span>`;
+    highlight = "";
+  }
+
+  return newWord;
 }
 
 testButton.addEventListener("click", () => {
   const pattern = getRegex(regexPattern.value);
-  testResult.innerText = getRegexMatch(pattern, stringToTest.innerText);
+  testResult.textContent = getRegexMatch(pattern, stringToTest.innerText);
+  console.log(highlightText(stringToTest.innerText));
   stringToTest.innerHTML = highlightText(stringToTest.innerText);
 });
