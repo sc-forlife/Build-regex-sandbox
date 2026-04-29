@@ -16,59 +16,50 @@ function getFlags() {
   return flags;
 }
 
-function getRegex(pattern) {
-  const regex = new RegExp(`${pattern}`, `${getFlags()}`);
-  return regex;
-}
-
-function getRegexMatch(regex, string) {
+function getRegexMatch(string) {
+  const regex = new RegExp(`${regexPattern.value}`, `${getFlags()}`);
   const matched = string.match(regex);
 
   if (matched === null) {
     return "no match";
   }
-
-  return globalFlag.checked ? matched.join(", ") : matched[0];
+  console.log(matched);
+  return globalFlag.checked ? matched : [...matched[0]];
 }
 
 function highlightText(userString) {
-  let highlight = "";
-  let newWord = "";
+  const matchedString = getRegexMatch(stringToTest.innerText);
 
-  if (!globalFlag.checked) {
-    for (const letter of userString) {
-      if (getRegex(regexPattern.value).test(letter)) {
-        newWord = userString.replace(
-          letter,
-          `<span class=\"highlight\">${letter}</span>`,
-        );
-        return newWord;
+  if (matchedString === null) return userString;
+
+  console.log(matchedString);
+
+  let highlight;
+  let newWord = userString;
+
+  for (const matched of matchedString) {
+    highlight = matched.replace(
+      matched,
+      `<span class=\"highlight\">${matched}</span>`,
+    );
+    if (newWord.includes(highlight)) {
+      continue;
+    } else {
+      if (globalFlag.checked) {
+        newWord = newWord.replaceAll(matched, highlight);
+      } else {
+        newWord = newWord.replace(matched, highlight);
       }
     }
-  }
-
-  for (const letter of userString) {
-    if (getRegex(regexPattern.value).test(letter)) {
-      highlight += letter;
-    } else {
-      newWord += highlight
-        ? `<span class=\"highlight\">${highlight}</span>${letter}`
-        : letter;
-      highlight = "";
-    }
-  }
-
-  if (highlight) {
-    newWord += `<span class=\"highlight\">${highlight}</span>`;
-    highlight = "";
   }
 
   return newWord;
 }
 
 testButton.addEventListener("click", () => {
-  const pattern = getRegex(regexPattern.value);
-  testResult.textContent = getRegexMatch(pattern, stringToTest.innerText);
+  testResult.textContent = getRegexMatch(stringToTest.innerText).join(", ");
+
   console.log(highlightText(stringToTest.innerText));
+
   stringToTest.innerHTML = highlightText(stringToTest.innerText);
 });
